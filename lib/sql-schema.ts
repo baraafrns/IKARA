@@ -32,21 +32,35 @@ CREATE INDEX IF NOT EXISTS idx_peserta_nama ON peserta_lomba (nama_anak);
 CREATE INDEX IF NOT EXISTS idx_peserta_status ON peserta_lomba (status_kehadiran);
 CREATE INDEX IF NOT EXISTS idx_peserta_jenis ON peserta_lomba (jenis_lomba);
 
--- 4. Enable Row Level Security (RLS) & Public Policies for Event Operations
+-- 4. Berikan Hak Akses Tabel ke role anon dan authenticated (Wajib di PostgreSQL/Supabase)
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON TABLE peserta_lomba TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+
+-- 5. Enable Row Level Security (RLS) & Public Policies for Event Operations
 ALTER TABLE peserta_lomba ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow public read access" ON peserta_lomba;
-CREATE POLICY "Allow public read access" ON peserta_lomba FOR SELECT USING (true);
+CREATE POLICY "Allow public read access" ON peserta_lomba FOR SELECT TO anon, authenticated USING (true);
 
 DROP POLICY IF EXISTS "Allow public insert access" ON peserta_lomba;
-CREATE POLICY "Allow public insert access" ON peserta_lomba FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public insert access" ON peserta_lomba FOR INSERT TO anon, authenticated WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow public update access" ON peserta_lomba;
-CREATE POLICY "Allow public update access" ON peserta_lomba FOR UPDATE USING (true);
+CREATE POLICY "Allow public update access" ON peserta_lomba FOR UPDATE TO anon, authenticated USING (true);
 
 DROP POLICY IF EXISTS "Allow public delete access" ON peserta_lomba;
-CREATE POLICY "Allow public delete access" ON peserta_lomba FOR DELETE USING (true);
+CREATE POLICY "Allow public delete access" ON peserta_lomba FOR DELETE TO anon, authenticated USING (true);
 
--- 5. Enable Realtime Replication
-ALTER PUBLICATION supabase_realtime ADD TABLE peserta_lomba;
+-- 6. Enable Realtime Replication (Aman jika dijalankan berulang)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' 
+    AND tablename = 'peserta_lomba'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE peserta_lomba;
+  END IF;
+END$$;
 `;

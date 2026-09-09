@@ -34,6 +34,8 @@ export const ImportView: React.FC<ImportViewProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [currentFileName, setCurrentFileName] = useState<string | null>(null);
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -44,27 +46,49 @@ export const ImportView: React.FC<ImportViewProps> = ({
   const handleFileProcess = async (file: File) => {
     setErrorMessage(null);
     setSuccessMessage(null);
+    setIsProcessingFile(true);
+    setCurrentFileName(file.name);
 
     const fileName = file.name.toLowerCase();
     try {
-      if (fileName.endsWith('.csv')) {
-        const text = await file.text();
-        const result = parseCSVString(text, existingPeserta);
-        setParseResult(result);
-      } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+      let result: ParseResult | null = null;
+
+      // 1. Try Excel parser if extension matches Excel
+      if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || file.type.includes('sheet') || file.type.includes('excel')) {
         const buffer = await file.arrayBuffer();
-        const result = parseExcelArrayBuffer(buffer, existingPeserta);
-        setParseResult(result);
+        result = parseExcelArrayBuffer(buffer, existingPeserta);
       } else {
-        setErrorMessage('Format file tidak didukung. Harap unggah file .csv atau .xlsx / .xls');
+        // 2. Default try CSV / text parser
+        const text = await file.text();
+        result = parseCSVString(text, existingPeserta);
+
+        // If CSV parsing produced 0 peserta, maybe it's actually an Excel file renamed as CSV
+        if (result.peserta.length === 0 && text.charCodeAt(0) === 0x50 && text.charCodeAt(1) === 0x4b) {
+          // 'PK' header indicates a zipped XLSX file!
+          const buffer = await file.arrayBuffer();
+          result = parseExcelArrayBuffer(buffer, existingPeserta);
+        }
+      }
+
+      if (!result || result.peserta.length === 0) {
+        setErrorMessage(
+          `File "${file.name}" terbaca tetapi tidak ditemukan data peserta yang valid. Pastikan terdapat kolom nama anak/peserta dan kategori lomba.`
+        );
+        setParseResult(null);
+      } else {
+        setParseResult(result);
+        setSuccessMessage(`Berhasil membaca file "${file.name}"! Ditemukan ${result.peserta.length} data peserta yang siap disinkronkan.`);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal memproses file';
-      setErrorMessage(`Error: ${msg}`);
+      setErrorMessage(`Error membaca file: ${msg}`);
+      setParseResult(null);
+    } finally {
+      setIsProcessingFile(false);
     }
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -72,12 +96,12 @@ export const ImportView: React.FC<ImportViewProps> = ({
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragLeave = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     setIsDragging(false);
   };
@@ -203,39 +227,69 @@ export const ImportView: React.FC<ImportViewProps> = ({
               Mendukung hasil ekspor Google Form atau template Excel peserta
             </p>
 
+            {/* Native file input with reset-on-click */}
             <input
+              id="csv-file-upload-input"
               type="file"
               ref={fileInputRef}
+              onClick={(e) => {
+                // Ensure re-selecting the same file triggers onChange
+                (e.target as HTMLInputElement).value = '';
+              }}
               onChange={(e) => {
                 if (e.target.files && e.target.files.length > 0) {
                   handleFileProcess(e.target.files[0]);
                 }
               }}
-              accept=".csv,.xlsx,.xls"
-              className="hidden"
+              accept=".csv,text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,.xls,application/octet-stream,*"
+              className="sr-only"
             />
 
-            <div
+            <label
+              htmlFor="csv-file-upload-input"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
-              onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+              className={`block border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all select-none ${
                 isDragging
-                  ? 'border-teal-600 bg-teal-50/50'
-                  : 'border-gray-300 hover:border-teal-500 hover:bg-slate-50/70'
+                  ? 'border-teal-600 bg-teal-50/70 scale-[1.01]'
+                  : isProcessingFile
+                  ? 'border-teal-400 bg-teal-50/30 animate-pulse'
+                  : 'border-gray-300 hover:border-teal-500 hover:bg-slate-50/80 bg-white'
               }`}
             >
               <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-2.5">
-                <UploadCloud className="w-6 h-6" />
+                {isProcessingFile ? (
+                  <RefreshCw className="w-6 h-6 animate-spin text-teal-600" />
+                ) : (
+                  <UploadCloud className="w-6 h-6" />
+                )}
               </div>
-              <p className="text-xs font-bold text-gray-800">
-                Tarik & Lepas file di sini, atau <span className="text-teal-600 underline">Klik untuk Pilih</span>
-              </p>
-              <p className="text-[11px] text-gray-400 mt-1">
-                Mendukung .CSV, .XLSX, .XLS
-              </p>
-            </div>
+
+              {isProcessingFile ? (
+                <div>
+                  <p className="text-xs font-bold text-teal-800">
+                    Memproses {currentFileName || 'File'}...
+                  </p>
+                  <p className="text-[11px] text-teal-600 mt-1">Sedang membaca dan memverifikasi baris data...</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-xs font-bold text-gray-800">
+                    Tarik & Lepas file di sini, atau{' '}
+                    <span className="text-teal-600 underline font-semibold">Klik untuk Pilih File</span>
+                  </p>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Mendukung semua format .CSV, .XLSX, dan .XLS
+                  </p>
+
+                  <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors">
+                    <UploadCloud className="w-3.5 h-3.5" />
+                    <span>Buka File dari Perangkat</span>
+                  </div>
+                </div>
+              )}
+            </label>
           </div>
 
           <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">

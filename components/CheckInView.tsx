@@ -237,7 +237,26 @@ export const CheckInView: React.FC<CheckInViewProps> = ({
           )}
         </div>
 
-        {filteredPeserta.length === 0 ? (
+        {pesertaList.length === 0 ? (
+          <div className="bg-white rounded-2xl p-8 sm:p-10 text-center border border-gray-200 shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-3">
+              <UserPlus className="w-7 h-7" />
+            </div>
+            <h3 className="text-base font-bold text-gray-900 mb-1">Database API Supabase Terhubung</h3>
+            <p className="text-xs text-gray-500 max-w-md mx-auto mb-5 leading-relaxed">
+              Tabel peserta_lomba di database Supabase Anda aktif dan siap digunakan. Belum ada data peserta yang terdaftar. Anda dapat menambahkan peserta baru satu per satu atau mengimpor file CSV Google Form di menu Impor Data.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
+              <button
+                onClick={onOpenAddModal}
+                className="px-4 py-2.5 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 shadow-xs transition-all flex items-center gap-1.5"
+              >
+                <UserPlus className="w-4 h-4" />
+                Tambah Peserta Baru
+              </button>
+            </div>
+          </div>
+        ) : filteredPeserta.length === 0 ? (
           <div className="bg-white rounded-2xl p-8 text-center border border-gray-200 shadow-xs">
             <div className="w-12 h-12 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center mx-auto mb-3">
               <Search className="w-6 h-6" />

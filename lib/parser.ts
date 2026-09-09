@@ -59,13 +59,28 @@ export function parseRawRecords(
     });
 
     // 1. Nama Anak
-    const namaAnak =
+    let namaAnak =
       normalizedRow['namalengkapanak'] ||
       normalizedRow['namaanak'] ||
       normalizedRow['nama'] ||
       normalizedRow['namapeserta'] ||
       normalizedRow['namalengkap'] ||
+      normalizedRow['namasiswi'] ||
+      normalizedRow['namasiswa'] ||
+      normalizedRow['namalengkappeserta'] ||
+      normalizedRow['fullname'] ||
+      normalizedRow['name'] ||
       '';
+
+    // Heuristic: if not matched, look for any key containing 'nama' or 'name' or 'peserta'
+    if (!namaAnak) {
+      const nameKey = Object.keys(normalizedRow).find(
+        (k) => (k.includes('nama') || k.includes('name') || k.includes('peserta') || k.includes('anak')) && !k.includes('orangtua') && !k.includes('wali') && !k.includes('pendamping')
+      );
+      if (nameKey) {
+        namaAnak = normalizedRow[nameKey];
+      }
+    }
 
     if (!namaAnak || String(namaAnak).trim() === '') {
       // Skip empty blank lines
@@ -73,24 +88,52 @@ export function parseRawRecords(
     }
 
     // 2. Jenis Lomba
-    const jenisLombaRaw =
+    let jenisLombaRaw =
       normalizedRow['lombayangdiminatipilihsesuaikelas'] ||
       normalizedRow['lombayangdiminati'] ||
       normalizedRow['jenislomba'] ||
       normalizedRow['lomba'] ||
       normalizedRow['kategori'] ||
+      normalizedRow['kategorilomba'] ||
+      normalizedRow['pilihanlomba'] ||
+      normalizedRow['competition'] ||
+      normalizedRow['category'] ||
       '';
+
+    if (!jenisLombaRaw) {
+      const lombaKey = Object.keys(normalizedRow).find(
+        (k) => k.includes('lomba') || k.includes('kategori') || k.includes('competition')
+      );
+      if (lombaKey) {
+        jenisLombaRaw = normalizedRow[lombaKey];
+      }
+    }
 
     const detectedCategory = detectCategoryFromName(String(jenisLombaRaw));
 
     // 3. Nama Pendamping
-    const namaPendamping =
+    let namaPendamping =
       normalizedRow['namaorangtuawali'] ||
       normalizedRow['namapendamping'] ||
       normalizedRow['orangtuawali'] ||
       normalizedRow['wali'] ||
       normalizedRow['namaorangtua'] ||
-      'Orang Tua / Wali';
+      normalizedRow['orangtua'] ||
+      normalizedRow['parent'] ||
+      normalizedRow['guardian'] ||
+      '';
+
+    if (!namaPendamping) {
+      const parentKey = Object.keys(normalizedRow).find(
+        (k) => k.includes('orangtua') || k.includes('wali') || k.includes('pendamping') || k.includes('parent') || k.includes('ibu') || k.includes('ayah')
+      );
+      if (parentKey) {
+        namaPendamping = normalizedRow[parentKey];
+      }
+    }
+    if (!namaPendamping) {
+      namaPendamping = 'Orang Tua / Wali';
+    }
 
     // 4. Nomor WA
     let nomorWa =
@@ -98,9 +141,24 @@ export function parseRawRecords(
       normalizedRow['nowaorangtua'] ||
       normalizedRow['nowa'] ||
       normalizedRow['nomorwa'] ||
+      normalizedRow['nowhatsapp'] ||
+      normalizedRow['nomorwhatsapp'] ||
+      normalizedRow['nohp'] ||
+      normalizedRow['hp'] ||
       normalizedRow['telepon'] ||
       normalizedRow['whatsapp'] ||
+      normalizedRow['phone'] ||
+      normalizedRow['phonenumber'] ||
       '-';
+
+    if (nomorWa === '-') {
+      const phoneKey = Object.keys(normalizedRow).find(
+        (k) => k.includes('wa') || k.includes('whatsapp') || k.includes('telepon') || k.includes('hp') || k.includes('phone') || k.includes('kontak')
+      );
+      if (phoneKey) {
+        nomorWa = normalizedRow[phoneKey] || '-';
+      }
+    }
 
     nomorWa = String(nomorWa).trim();
     // Normalize Indonesian phone numbers if starts with 08 or 62
@@ -196,9 +254,11 @@ export function parseRawRecords(
 }
 
 export function parseCSVString(csvText: string, existingPeserta: PesertaLomba[] = []): ParseResult {
-  const result = Papa.parse(csvText, {
+  const cleanCsv = csvText.replace(/^\uFEFF/, '').trim();
+  const result = Papa.parse(cleanCsv, {
     header: true,
-    skipEmptyLines: true,
+    skipEmptyLines: 'greedy',
+    transformHeader: (h) => h.trim().replace(/^["']|["']$/g, ''),
   });
 
   if (result.errors && result.errors.length > 0) {

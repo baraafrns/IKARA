@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { X, Copy, Check, Database, ExternalLink, RefreshCw, Key, Globe, AlertTriangle } from 'lucide-react';
 import { SUPABASE_SQL_SCHEMA } from '@/lib/sql-schema';
-import { getActiveSupabaseConfig, saveCustomSupabaseConfig, getSupabaseClient } from '@/lib/supabase';
+import { getActiveSupabaseConfig, saveCustomSupabaseConfig, getSupabaseClient, cleanUrl, cleanString } from '@/lib/supabase';
 
 interface SqlModalProps {
   isOpen: boolean;
@@ -38,24 +38,32 @@ export const SqlModal: React.FC<SqlModalProps> = ({
     setIsSaving(true);
     setTestResult(null);
 
-    const trimmedUrl = supabaseUrl.trim();
-    const trimmedKey = supabaseKey.trim();
+    const cleanedUrl = cleanUrl(supabaseUrl);
+    const cleanedKey = cleanString(supabaseKey);
 
-    if (!trimmedUrl && !trimmedKey) {
-      saveCustomSupabaseConfig(null);
+    if (!cleanedUrl && !cleanedKey) {
+      await saveCustomSupabaseConfig(null);
       setTestResult({ success: true, message: 'Kembali ke mode Local Storage (Browser Cache).' });
       setIsSaving(false);
       onConfigUpdated();
       return;
     }
 
-    if (!trimmedUrl.startsWith('http')) {
+    if (!cleanedUrl.startsWith('http://') && !cleanedUrl.startsWith('https://')) {
       setTestResult({ success: false, message: 'URL Supabase harus diawali dengan https://' });
       setIsSaving(false);
       return;
     }
 
-    saveCustomSupabaseConfig({ url: trimmedUrl, anonKey: trimmedKey });
+    // Auto update state if cleaned values differed
+    if (cleanedUrl !== supabaseUrl) {
+      setSupabaseUrl(cleanedUrl);
+    }
+    if (cleanedKey !== supabaseKey) {
+      setSupabaseKey(cleanedKey);
+    }
+
+    await saveCustomSupabaseConfig({ url: cleanedUrl, anonKey: cleanedKey });
 
     // Test connection
     try {
@@ -70,6 +78,22 @@ export const SqlModal: React.FC<SqlModalProps> = ({
             success: true,
             message: 'Terhubung ke Supabase! Tabel "peserta_lomba" belum dibuat. Harap jalankan Skrip SQL di bawah pada SQL Editor Supabase Anda.',
           });
+          onConfigUpdated();
+        } else if (error.message.includes('Invalid path specified in request URL') || error.message.includes('Invalid path')) {
+          setTestResult({
+            success: false,
+            message: 'URL Supabase salah: Jangan gunakan URL browser dashboard (supabase.com/dashboard/...). Gunakan Project URL dari Project Settings > API dengan format: https://[id-proyek].supabase.co',
+          });
+        } else if (error.message.includes('Invalid API key')) {
+          setTestResult({
+            success: false,
+            message: 'Kunci API salah: Pastikan menyalin key "anon public" (diawali eyJ...) tanpa tanda kutip.',
+          });
+        } else if (error.message.includes('permission denied')) {
+          setTestResult({
+            success: false,
+            message: 'Akses Ditolak (Permission Denied): Role anon belum memiliki izin ke tabel. Jalankan baris GRANT SQL di bawah pada SQL Editor Supabase Anda.',
+          });
         } else {
           setTestResult({
             success: false,
@@ -81,6 +105,7 @@ export const SqlModal: React.FC<SqlModalProps> = ({
           success: true,
           message: 'Koneksi Berhasil! Terhubung secara realtime ke tabel "peserta_lomba" Supabase.',
         });
+        onConfigUpdated();
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Koneksi gagal';
@@ -154,6 +179,9 @@ export const SqlModal: React.FC<SqlModalProps> = ({
                 onChange={(e) => setSupabaseKey(e.target.value)}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-gray-300 focus:border-teal-600 focus:ring-1 focus:ring-teal-600 bg-white"
               />
+              <p className="text-[11px] text-gray-500 mt-1">
+                ⚠️ Gunakan key <strong>anon public</strong> dari menu <em>Project Settings &gt; API</em> di Supabase (biasanya diawali dengan <code className="bg-gray-100 px-1 py-0.5 rounded text-gray-700 font-mono">eyJ...</code>). <strong>Jangan sertakan tanda kutip</strong>.
+              </p>
             </div>
 
             {testResult && (

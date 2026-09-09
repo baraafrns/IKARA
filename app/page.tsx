@@ -20,14 +20,17 @@ import {
   upsertPesertaList,
   resetAllDataToSample,
   getSupabaseClient,
+  syncRemoteConfig,
 } from '@/lib/supabase';
-import { UserCheck, ShieldAlert, BarChart3, UploadCloud } from 'lucide-react';
+import { UserCheck, ShieldAlert, BarChart3, UploadCloud, AlertTriangle } from 'lucide-react';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<NavTab>('checkin');
   const [pesertaList, setPesertaList] = useState<PesertaLomba[]>([]);
-  const [dataSource, setDataSource] = useState<'supabase' | 'local'>('local');
-  const [isLoading, setIsLoading] = useState(false);
+  // Default to Supabase API directly
+  const [dataSource, setDataSource] = useState<'supabase' | 'local'>('supabase');
+  const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSqlModalOpen, setIsSqlModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -36,9 +39,15 @@ export default function HomePage() {
   const loadData = useCallback(async () => {
     setIsRefreshing(true);
     try {
+      await syncRemoteConfig();
       const res = await fetchAllPeserta();
       setPesertaList(res.data);
       setDataSource(res.source);
+      if (res.error) {
+        setApiErrorMessage(res.error);
+      } else {
+        setApiErrorMessage(null);
+      }
     } catch (err) {
       console.error('Error loading peserta:', err);
     } finally {
@@ -50,38 +59,62 @@ export default function HomePage() {
   useEffect(() => {
     let isSubscribed = true;
 
-    // Async initial fetch
-    fetchAllPeserta().then((res) => {
-      if (isSubscribed) {
-        setPesertaList(res.data);
-        setDataSource(res.source);
-      }
-    });
+    async function initConnection() {
+      setIsLoading(true);
+      try {
+        // 1. Sync remote config from server if available
+        await syncRemoteConfig();
 
-    // Setup Supabase Realtime subscription if available
-    const client = getSupabaseClient();
-    if (client) {
-      const channel = client
-        .channel('realtime_peserta_lomba')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'peserta_lomba' },
-          () => {
-            fetchAllPeserta().then((res) => {
-              if (isSubscribed) {
-                setPesertaList(res.data);
-                setDataSource(res.source);
-              }
-            });
+        // 2. Fetch live data from Supabase API
+        const res = await fetchAllPeserta();
+        if (isSubscribed) {
+          setPesertaList(res.data);
+          setDataSource(res.source);
+          if (res.error) {
+            setApiErrorMessage(res.error);
+          } else {
+            setApiErrorMessage(null);
           }
-        )
-        .subscribe();
+        }
 
-      return () => {
-        isSubscribed = false;
-        client.removeChannel(channel);
-      };
+        // 3. Setup Supabase Realtime subscription
+        const client = getSupabaseClient();
+        if (client && isSubscribed) {
+          const channel = client
+            .channel('realtime_peserta_lomba')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'peserta_lomba' },
+              () => {
+                fetchAllPeserta().then((latestRes) => {
+                  if (isSubscribed) {
+                    setPesertaList(latestRes.data);
+                    setDataSource(latestRes.source);
+                    if (latestRes.error) {
+                      setApiErrorMessage(latestRes.error);
+                    } else {
+                      setApiErrorMessage(null);
+                    }
+                  }
+                });
+              }
+            )
+            .subscribe();
+
+          return () => {
+            client.removeChannel(channel);
+          };
+        }
+      } catch (err) {
+        console.error('Failed to init Supabase connection:', err);
+      } finally {
+        if (isSubscribed) {
+          setIsLoading(false);
+        }
+      }
     }
+
+    initConnection();
 
     return () => {
       isSubscribed = false;
@@ -173,7 +206,43 @@ export default function HomePage() {
         onOpenSqlModal={() => setIsSqlModalOpen(true)}
         onRefresh={loadData}
         isRefreshing={isRefreshing}
+        isLoading={isLoading}
       />
+
+      {/* Supabase Error Notice Banner */}
+      {apiErrorMessage && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-xs text-amber-900">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                <strong>Perhatian Supabase:</strong>{' '}
+                {apiErrorMessage.includes('Invalid path')
+                  ? 'URL Supabase salah format. Gunakan Project URL dari Project Settings > API: https://[id-proyek].supabase.co (bukan link browser dashboard).'
+                  : apiErrorMessage.includes('permission denied')
+                  ? 'Izin tabel belum diberikan ke role anon. Jalankan skrip GRANT SQL di menu Database pada SQL Editor Supabase Anda.'
+                  : apiErrorMessage.includes('Invalid API key') || apiErrorMessage.includes('apiKey')
+                  ? 'API Key Supabase tidak valid. Pastikan memakai kunci "anon public" (bukan service_role/password) dan tanpa tanda petik.'
+                  : apiErrorMessage}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => setIsSqlModalOpen(true)}
+                className="font-bold underline text-amber-900 hover:text-amber-950"
+              >
+                Ubah Key di Sini
+              </button>
+              <button
+                onClick={() => setApiErrorMessage(null)}
+                className="text-amber-700 hover:text-amber-900 text-[11px]"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Desktop Navigation Tabs (Hidden on mobile, mobile uses BottomNav) */}
       <div className="hidden md:block bg-white border-b border-gray-200">
@@ -243,9 +312,10 @@ export default function HomePage() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center min-h-[350px] space-y-3">
+          <div className="flex flex-col items-center justify-center min-h-[380px] space-y-3">
             <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs font-semibold text-gray-500">Memuat data peserta lomba...</p>
+            <p className="text-sm font-bold text-gray-800">Menghubungkan ke API Supabase...</p>
+            <p className="text-xs text-gray-500">Sinkronisasi data real-time peserta lomba</p>
           </div>
         ) : (
           <>

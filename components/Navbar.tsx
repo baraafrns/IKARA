@@ -9,6 +9,7 @@ interface NavbarProps {
   onOpenSqlModal: () => void;
   onRefresh: () => void;
   isRefreshing?: boolean;
+  isLoading?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -17,6 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSqlModal,
   onRefresh,
   isRefreshing = false,
+  isLoading = false,
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-xs">
@@ -51,14 +53,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Database className={`w-3.5 h-3.5 ${dataSource === 'supabase' ? 'text-teal-600' : 'text-orange-500'}`} />
               <span className="hidden sm:inline">
-                {dataSource === 'supabase' ? 'Supabase Connected' : 'Local Storage Mode'}
+                {isLoading
+                  ? 'Menghubungkan API...'
+                  : dataSource === 'supabase'
+                  ? 'Supabase Connected'
+                  : 'Local Storage Mode'}
               </span>
               <span className="sm:hidden">
-                {dataSource === 'supabase' ? 'Cloud' : 'Local'}
+                {isLoading ? 'Connecting' : dataSource === 'supabase' ? 'API Connected' : 'Local'}
               </span>
               <span
                 className={`w-2 h-2 rounded-full ${
-                  dataSource === 'supabase' ? 'bg-teal-500 animate-pulse' : 'bg-orange-400'
+                  isLoading
+                    ? 'bg-amber-400 animate-ping'
+                    : dataSource === 'supabase'
+                    ? 'bg-teal-500 animate-pulse'
+                    : 'bg-orange-400'
                 }`}
               />
             </button>
