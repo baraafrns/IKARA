@@ -1,0 +1,6 @@
+{
+  "name": "IKARA COMPETITION DATA CENTER",
+  "description": "Sistem Registrasi Ulang & Penjemputan Peserta Lomba Anak Masjid - IKARA Competition Data Center",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
