@@ -22,15 +22,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     {
       id: 'checkin' as NavTab,
       label: 'Check-in',
-      sublabel: 'Pintu Masuk',
+      sublabel: 'Daftar Ulang',
       icon: UserCheck,
       badge: countBelumHadir > 0 ? countBelumHadir : undefined,
       badgeColor: 'bg-orange-500 text-white',
     },
     {
       id: 'pickup' as NavTab,
-      label: 'Penjemputan',
-      sublabel: 'Pintu Keluar',
+      label: 'Pulang',
+      sublabel: 'Check-out',
       icon: ShieldAlert,
       badge: countDiLokasi > 0 ? countDiLokasi : undefined,
       badgeColor: 'bg-teal-600 text-white',
@@ -43,8 +43,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     },
     {
       id: 'import' as NavTab,
-      label: 'Impor Data',
-      sublabel: 'Sync CSV/Sheet',
+      label: 'Data',
+      sublabel: 'Impor data peserta',
       icon: UploadCloud,
     },
   ];
