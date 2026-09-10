@@ -152,7 +152,7 @@ export const SqlModal: React.FC<SqlModalProps> = ({
           <form onSubmit={handleSaveConfig} className="space-y-4 p-4 rounded-xl bg-gray-50 border border-gray-200">
             <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
               <Globe className="w-3.5 h-3.5 text-teal-600" />
-              Koneksi Supabase (Opsional)
+              Koneksi Supabase
             </h3>
 
             <div>
@@ -208,7 +208,7 @@ export const SqlModal: React.FC<SqlModalProps> = ({
                 }}
                 className="text-xs text-gray-500 hover:text-gray-800 underline"
               >
-                Gunakan Local Cache Saja
+                Gunakan Local Cache
               </button>
 
               <button
@@ -251,9 +251,9 @@ export const SqlModal: React.FC<SqlModalProps> = ({
           {/* Quick Demo Reset Section */}
           <div className="p-3.5 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
             <div>
-              <h4 className="text-xs font-bold text-gray-800">Reset Data Simulasi</h4>
+              <h4 className="text-xs font-bold text-gray-800">Hapus semua data</h4>
               <p className="text-[11px] text-gray-500">
-                Muat ulang 10 peserta sampel simulasi dari 6 kategori lomba Masjid IKARA.
+                Hapus seluruh data peserta IKARA Festival.
               </p>
             </div>
             <button
@@ -265,7 +265,7 @@ export const SqlModal: React.FC<SqlModalProps> = ({
               }}
               className="px-3 py-1.5 text-xs font-semibold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg shrink-0 transition-colors"
             >
-              Reset ke Sampel
+              Delete
             </button>
           </div>
         </div>
