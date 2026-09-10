@@ -201,12 +201,9 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-slate-50 text-gray-900 selection:bg-teal-100 selection:text-teal-900">
       {/* Top Bar */}
       <Navbar
-        dataSource={dataSource}
         totalPeserta={pesertaList.length}
-        onOpenSqlModal={() => setIsSqlModalOpen(true)}
         onRefresh={loadData}
         isRefreshing={isRefreshing}
-        isLoading={isLoading}
       />
 
       {/* Supabase Error Notice Banner */}
@@ -348,6 +345,9 @@ export default function HomePage() {
               <ImportView
                 existingPeserta={pesertaList}
                 onImportSuccess={handleImportSuccess}
+                dataSource={dataSource}
+                isLoading={isLoading}
+                onOpenSqlModal={() => setIsSqlModalOpen(true)}
               />
             )}
           </>

@@ -1,0 +1,6 @@
+{
+  "name": "Registrasi & Penjemputan Lomba Anak",
+  "description": "Sistem registrasi ulang, presensi, dan penjemputan peserta lomba anak terintegrasi Supabase Realtime",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

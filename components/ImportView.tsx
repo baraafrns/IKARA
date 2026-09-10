@@ -25,11 +25,17 @@ import {
 interface ImportViewProps {
   existingPeserta: PesertaLomba[];
   onImportSuccess: (newList: PesertaLomba[]) => Promise<void>;
+  dataSource?: 'supabase' | 'local';
+  isLoading?: boolean;
+  onOpenSqlModal?: () => void;
 }
 
 export const ImportView: React.FC<ImportViewProps> = ({
   existingPeserta,
   onImportSuccess,
+  dataSource = 'supabase',
+  isLoading = false,
+  onOpenSqlModal,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
@@ -197,6 +203,71 @@ export const ImportView: React.FC<ImportViewProps> = ({
           <Download className="w-3.5 h-3.5" />
           <span>Download Template CSV</span>
         </button>
+      </div>
+
+      {/* Database & API Status Card */}
+      <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start sm:items-center gap-3">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                dataSource === 'supabase' ? 'bg-teal-50 text-teal-600' : 'bg-orange-50 text-orange-600'
+              }`}
+            >
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                  Status Database
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                    isLoading
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                      : dataSource === 'supabase'
+                      ? 'bg-teal-50 text-teal-700 border border-teal-200'
+                      : 'bg-orange-50 text-orange-700 border border-orange-200'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isLoading
+                        ? 'bg-amber-500 animate-ping'
+                        : dataSource === 'supabase'
+                        ? 'bg-teal-500 animate-pulse'
+                        : 'bg-orange-500'
+                    }`}
+                  />
+                  {isLoading
+                    ? 'Menghubungkan ke API...'
+                    : dataSource === 'supabase'
+                    ? 'API CONNECTED (Supabase Cloud)'
+                    : 'LOCAL STORAGE MODE (Offline)'}
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 mt-1">
+                {dataSource === 'supabase'
+                  ? 'Data peserta otomatis tersimpan aman di cloud Supabase & tersinkronisasi antar-perangkat secara realtime.'
+                  : 'Data saat ini tersimpan di memori browser lokal. Hubungkan ke Supabase untuk sinkronisasi cloud multi-perangkat.'}
+              </p>
+            </div>
+          </div>
+
+          {onOpenSqlModal && (
+            <button
+              onClick={onOpenSqlModal}
+              className={`flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                dataSource === 'supabase'
+                  ? 'bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200'
+                  : 'bg-teal-600 hover:bg-teal-700 text-white shadow-xs'
+              }`}
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span>Pengaturan Database & SQL</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Alerts */}
