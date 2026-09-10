@@ -390,7 +390,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             className="flex-1 sm:flex-initial px-3 py-2 bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-700 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Demo</span>
+            <span>Hapus Semua Data</span>
           </button>
         </div>
       </div>
