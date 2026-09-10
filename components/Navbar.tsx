@@ -32,7 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h1 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight leading-tight truncate">
-                  IKARA COMPETITION
+                  IKARA FESTIVAL
                 </h1>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 uppercase tracking-wide">
                   DATA CENTER
