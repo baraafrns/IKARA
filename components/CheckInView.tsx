@@ -96,7 +96,7 @@ export const CheckInView: React.FC<CheckInViewProps> = ({
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-ping" />
               <h2 className="text-base font-bold text-gray-900 tracking-tight">
-                Pintu Masuk • Registrasi Ulang
+                Registrasi Ulang
               </h2>
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
@@ -244,7 +244,7 @@ export const CheckInView: React.FC<CheckInViewProps> = ({
             </div>
             <h3 className="text-base font-bold text-gray-900 mb-1">Database API Supabase Terhubung</h3>
             <p className="text-xs text-gray-500 max-w-md mx-auto mb-5 leading-relaxed">
-              Tabel peserta_lomba di database Supabase Anda aktif dan siap digunakan. Belum ada data peserta yang terdaftar. Anda dapat menambahkan peserta baru satu per satu atau mengimpor file CSV Google Form di menu Impor Data.
+              Belum ada data peserta yang terdaftar. Anda dapat menambahkan peserta baru satu per satu atau mengimpor file CSV Google Form di menu Impor Data.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2.5">
               <button
@@ -397,7 +397,7 @@ export const CheckInView: React.FC<CheckInViewProps> = ({
                     <div className="w-full flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 text-xs text-teal-800 font-semibold px-3 py-2 bg-teal-50 border border-teal-200 rounded-xl flex-1">
                         <ShieldCheck className="w-4 h-4 text-teal-600 shrink-0" />
-                        <span>Peserta sudah di arena lomba</span>
+                        <span>Peserta sudah tiba</span>
                       </div>
                       <button
                         onClick={() => handleRevert(peserta.id)}
