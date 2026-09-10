@@ -100,7 +100,7 @@ export const PickUpView: React.FC<PickUpViewProps> = ({
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
               <h2 className="text-base font-bold text-gray-900 tracking-tight">
-                Pintu Keluar • Verifikasi Penjemputan
+                Pintu Keluar
               </h2>
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
@@ -110,7 +110,7 @@ export const PickUpView: React.FC<PickUpViewProps> = ({
           {countWajibJemput > 0 && (
             <div className="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold shrink-0 flex items-center gap-1">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-              <span>{countWajibJemput} Wajib Jemput</span>
+              <span>{countWajibJemput} Dijemput</span>
             </div>
           )}
         </div>
@@ -187,7 +187,7 @@ export const PickUpView: React.FC<PickUpViewProps> = ({
         <div className="bg-teal-700 text-white px-4 py-3 rounded-xl shadow-md flex items-center justify-between text-xs font-semibold animate-in slide-in-from-top duration-200">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-teal-200 shrink-0" />
-            <span>Verifikasi penjemputan berhasil: <strong>{lastCheckoutName}</strong></span>
+            <span>Update status peserta: <strong>{lastCheckoutName}</strong></span>
           </div>
           <span className="text-[10px] text-teal-100">Status: Sudah Pulang</span>
         </div>
@@ -197,7 +197,7 @@ export const PickUpView: React.FC<PickUpViewProps> = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1 text-xs text-gray-500 font-medium">
           <span>Menampilkan {filteredPeserta.length} Peserta</span>
-          <span className="text-gray-400">Pos Pemeriksaan Pintu Keluar</span>
+          <span className="text-gray-400">Pos Pintu Keluar</span>
         </div>
 
         {filteredPeserta.length === 0 ? (
@@ -290,17 +290,17 @@ export const PickUpView: React.FC<PickUpViewProps> = ({
                     <div className="flex items-center gap-2">
                       <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
                       <span className="text-xs font-bold uppercase tracking-wider text-amber-900">
-                        ⚠️ Wajib Dijemput Pendamping
+                        Wajib Dijemput
                       </span>
                     </div>
 
                     <div className="text-xs space-y-1 pt-1 border-t border-amber-200/80">
                       <div className="flex items-center justify-between">
-                        <span className="text-amber-800">Nama Penjemput Sah:</span>
+                        <span className="text-amber-800">Nama Pendamping:</span>
                         <strong className="text-amber-950 font-bold">{peserta.nama_pendamping}</strong>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-amber-800">Nomor WhatsApp:</span>
+                        <span className="text-amber-800">Kontak:</span>
                         <div className="flex items-center gap-1.5">
                           <a
                             href={`https://wa.me/${waPhone}?text=${waMessage}`}
@@ -309,7 +309,7 @@ export const PickUpView: React.FC<PickUpViewProps> = ({
                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[11px] font-bold transition-colors"
                           >
                             <MessageCircle className="w-3 h-3" />
-                            <span>Hubungi WA</span>
+                            <span>Hubungi</span>
                           </a>
                           <span className="font-mono font-semibold">{peserta.nomor_wa}</span>
                         </div>
@@ -326,7 +326,7 @@ export const PickUpView: React.FC<PickUpViewProps> = ({
                           className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-500 mt-0.5 shrink-0"
                         />
                         <span className="text-[11px] text-amber-900 font-medium leading-tight">
-                          Saya telah mencocokkan identitas fisik penjemput dengan nama: <strong>{peserta.nama_pendamping}</strong>
+                          Saya mengkonfirmasi bahwa peserta sudah dijemput: <strong>{peserta.nama_pendamping}</strong>
                         </span>
                       </label>
                     )}
@@ -341,7 +341,7 @@ export const PickUpView: React.FC<PickUpViewProps> = ({
                       </div>
                     </div>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">
-                      Bebas Jemput
+                      Tidak dijemput
                     </span>
                   </div>
                 )}
@@ -395,12 +395,12 @@ export const PickUpView: React.FC<PickUpViewProps> = ({
                       className="px-3 py-2 text-xs font-semibold text-gray-500 hover:text-red-700 hover:bg-red-50 border border-gray-200 rounded-xl transition-colors flex items-center gap-1 shrink-0"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Batal Pulang</span>
+                      <span>Batalkan</span>
                     </button>
                   </div>
                 ) : (
                   <div className="text-xs text-gray-400 text-center py-2 bg-gray-50 rounded-xl border border-gray-100">
-                    Peserta belum daftar ulang di Pintu Masuk
+                    Peserta belum daftar ulang
                   </div>
                 )}
               </div>
