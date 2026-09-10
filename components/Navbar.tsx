@@ -39,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </span>
               </div>
               <p className="text-xs text-gray-500 truncate">
-                Sistem Registrasi & Penjemputan Aman • {totalPeserta} Peserta
+                Sistem Pendataan • {totalPeserta} Peserta
               </p>
             </div>
           </div>
